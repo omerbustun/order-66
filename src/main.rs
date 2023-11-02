@@ -76,6 +76,22 @@ async fn main() -> Result<()> {
     info!("Expired:   {}", expired_count);
     info!("Cancelled: {}", cancelled_count);
 
+    if let (Some(file_path), Some(time_in_minutes)) = (opts.file_path, opts.time_in_minutes) {
+        let delete_at = Utc::now() + chrono::Duration::seconds(time_in_minutes as i64 * 60);
+        info!("Scheduled to delete '{}' in {} minutes.", file_path, time_in_minutes);
+    
+        let new_task = DeletionTask {
+            file_path: file_path.clone(), 
+            delete_at,
+            created_at: Utc::now(),
+            status: TaskStatus::Pending,
+        };
+        
+        tasks.push(new_task);
+        
+        save_tasks(&tasks)?;
+    }
+
     for task in tasks.iter_mut() {
         match task.status {
             TaskStatus::Pending => {
@@ -108,22 +124,6 @@ async fn main() -> Result<()> {
 
     save_tasks(&tasks)?;
 
-    if let (Some(file_path), Some(time_in_minutes)) = (opts.file_path, opts.time_in_minutes) {
-        let delete_at = Utc::now() + chrono::Duration::seconds(time_in_minutes as i64 * 60);
-        info!("Scheduled to delete '{}' in {} minutes.", file_path, time_in_minutes);
-    
-        let new_task = DeletionTask {
-            file_path: file_path.clone(), 
-            delete_at,
-            created_at: Utc::now(),
-            status: TaskStatus::Pending,
-        };
-        
-        tasks.push(new_task);
-        
-        save_tasks(&tasks)?;
-    }
-    
 
     tokio::signal::ctrl_c().await.expect("Failed to listen for ctrl_c");
     Ok(())
