@@ -80,24 +80,31 @@ async fn main() -> Result<()> {
         match task.status {
             TaskStatus::Pending => {
                 let duration_until_delete = task.delete_at.signed_duration_since(Utc::now());
+                info!("Duration until delete: {:?}", duration_until_delete);
                 if duration_until_delete > chrono::Duration::zero() {
-                    // Schedule the deletion using tokio::spawn
                     let file_path = task.file_path.clone();
+                    info!("Scheduling deletion for: {}", &file_path);
                     tokio::spawn(async move {
+                        info!("Waiting to delete file: {}", &file_path);
                         tokio::time::sleep(duration_until_delete.to_std().unwrap()).await;
-                        if let Err(e) = async_fs::remove_file(&file_path).await {
-                            error!("Failed to delete file '{}': {}", &file_path, e);
-                        } else {
-                            info!("'{}' has been deleted.", &file_path);
+                        info!("Attempting to delete file: {}", &file_path);
+                        match async_fs::remove_file(&file_path).await {
+                            Ok(_) => {
+                                info!("'{}' has been deleted.", &file_path);
+                            },
+                            Err(e) => {
+                                error!("Failed to delete file '{}': {}", &file_path, e);
+                            },
                         }
                     });
                 } else {
                     task.status = TaskStatus::Expired;
                 }
             }
-            _ => {} // Do nothing for Completed, Cancelled, and Expired tasks
+            _ => {}
         }
     }
+    
 
     save_tasks(&tasks)?;
 
