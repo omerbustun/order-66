@@ -6,7 +6,6 @@ description = "Schedule file deletions and manage via Telegram bot."
 authors = ["Ömer Üstün <omerbustun@gmail.com>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
-homepage = "https://github.com/omerbustun/order-66"
 repository = "https://github.com/omerbustun/order-66"
 keywords = ["file", "deletion", "schedule", "telegram", "bot"]
 categories = ["command-line-utilities"]
